@@ -7,12 +7,15 @@ public class HealthSystem : MonoBehaviour
 {
 
     [SerializeField] private float maxHealth = 100;
-    private float currentHealth;
+    [SerializeField] private float damageStunTime;
+    public float currentHealth;
+    private PlayerController playerController;
 
     [SerializeField] private Image healthBar;
 
     void Start()
     {
+        playerController = FindObjectOfType<PlayerController>();
         currentHealth = maxHealth;
         healthBar.fillAmount = currentHealth / maxHealth;
     }
@@ -20,8 +23,22 @@ public class HealthSystem : MonoBehaviour
     public void ApplyDamage(float damage)
     {
         currentHealth -= damage;
+        SoundManager.instance.PlayPlayerDamagedSound();
         UpdateHealth();
+        if (!playerController.IsDead())
+        {
+            StartCoroutine(DamageStun());
+        }
         PlayerKilled();
+    }
+
+    IEnumerator DamageStun()
+    {
+        playerController.animator.Play("Damaged");
+        playerController.enabled = false;
+        yield return new WaitForSeconds(damageStunTime);
+        playerController.enabled = true;
+        playerController.animator.CrossFade("idle", 0);
     }
     public void PlayerKilled()
     {

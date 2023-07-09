@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 5267250078234266795}
   m_Layer: 0
   m_Name: ErekiBall2
-  m_TagString: Untagged
+  m_TagString: Bullet
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -46,7 +46,7 @@ ParticleSystem:
   m_GameObject: {fileID: 100000}
   serializedVersion: 8
   lengthInSec: 1
-  simulationSpeed: 1
+  simulationSpeed: 100
   stopAction: 0
   cullingMode: 1
   ringBufferMode: 0
@@ -551,7 +551,7 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     randomizeRotationDirection: 0
-    maxNumParticles: 15
+    maxNumParticles: 30
     customEmitterVelocity: {x: 0, y: 0, z: 0}
     size3D: 0
     rotation3D: 0
@@ -4795,7 +4795,7 @@ ParticleSystemRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1000
   m_RenderMode: 0
   m_MeshDistribution: 0
   m_SortMode: 0
@@ -4855,6 +4855,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bulletLifeTime: 10
+  collisionParticles: {fileID: 100000, guid: 5c7aeddefe9f8499091b160181d837ed, type: 3}
 --- !u!50 &5267250078234266795
 Rigidbody2D:
   serializedVersion: 4

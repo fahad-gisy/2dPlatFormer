@@ -9,7 +9,10 @@ public class PlayerController : MonoBehaviour
     [Header("PlayerComponents")]
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
-    private Animator animator;
+    [HideInInspector] public Animator animator;
+    private HealthSystem healthSystem;
+
+    
 
     [Header("Player Movements Variables")]
     [SerializeField] private float playerSpeed;// player target speed value
@@ -26,6 +29,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] Transform groundCheckTransform;
     [SerializeField] private float groundCheckRadius;
     [SerializeField] private bool isGrounded;
+
 
     [Header("WallSliding Variables")]
     private bool IsWallSliding;
@@ -56,6 +60,7 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
+        healthSystem = FindObjectOfType<HealthSystem>();
     }
 
     // Update is called once per frame
@@ -71,6 +76,9 @@ public class PlayerController : MonoBehaviour
         wallSlide();
         OnJump();
         WallJump();
+        IsDead();
+
+
 
 
         if (startShootingInput)
@@ -103,7 +111,7 @@ public class PlayerController : MonoBehaviour
     private void OnPlayerMove()
     {
         //move the player on x axis whenever A or D pressed multiple by speed so i can control player's speed
-        if (!IsWallSliding)
+        if (!IsWallSliding && !IsDead())
         {
             rb.velocity = new Vector2(moveInput * playerSpeed * Time.deltaTime, rb.velocity.y);
         } 
@@ -116,22 +124,24 @@ public class PlayerController : MonoBehaviour
 
     private void OnJump()
     {//if the player grounded then jump input pressed JUMP
-        if (IsGrounded() && jumpInput)
-        {
+        if (IsGrounded() && jumpInput && !IsDead())
+        {  //if player gorouned then preseed space apply velocity on y axis to jump
             rb.velocity = new Vector2(rb.velocity.x,jumpForce);
+            SoundManager.instance.PlayJumpSound();
             Debug.DrawLine(transform.position, groundCheckTransform.position, IsGrounded() ? Color.green : Color.red);// drwa line for debuging
         }
     }
 
+   
     private bool IsWalled()
-    {
+    {//cheking if the player touched the wall
         return Physics2D.OverlapCircle(wallCheck.position,0.2f,wallLayerMask);
     }
 
     private void wallSlide()
     {
-        if (IsWalled() && !IsGrounded() && moveInput != 0 && !shootingToggle)
-        {
+        if (IsWalled() && !IsGrounded() && moveInput != 0 && !shootingToggle && !IsDead())
+        {//if the player on the wall apply new velocity on y axis to start sliding
             IsWallSliding = true;
             rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlidingSpeed, float.MaxValue));
         }
@@ -141,38 +151,44 @@ public class PlayerController : MonoBehaviour
             IsWallSliding = false;
         }
     }
-
+    //wall jumping mechanic
     private void WallJump()
     {
-        if (IsWallSliding)
-        {
-            isWallJumping = false;
-            wallJumpingDirection = -transform.localScale.x;
-            wallJumpingCounter = wallJumpingTime;
 
-            CancelInvoke(nameof(StopWallJumping));
-        }
-        else
+        if (!IsDead())
         {
-            wallJumpingCounter -= Time.deltaTime;
-        }
-
-        if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f)
-        {
-            isWallJumping = true;
-            rb.velocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);
-            wallJumpingCounter = 0f;
-
-            if (transform.localScale.x != wallJumpingDirection)
+            if (IsWallSliding)// if the player sliding on the wall
             {
-                isFacingRight = !isFacingRight;
-                Vector3 localScale = transform.localScale;
-                localScale.x *= -1f;
-                transform.localScale = localScale;
+                isWallJumping = false;
+                wallJumpingDirection = -transform.localScale.x; // filp the player to the wall jumping direaction
+                wallJumpingCounter = wallJumpingTime;//wall jumping time is 0.2 ms so the player wont flying 4 ever
+
+                CancelInvoke(nameof(StopWallJumping));//invoke and stop the wall jump
+            }
+            else
+            {
+                wallJumpingCounter -= Time.deltaTime;
             }
 
-            Invoke(nameof(StopWallJumping), wallJumpingDuration);
+            if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f)// if allowed to jump and space pressed
+            {
+                isWallJumping = true;
+                SoundManager.instance.PlayJumpSound();
+                rb.velocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);//apply the jump velcoity x,y
+                wallJumpingCounter = 0f;
+
+                if (transform.localScale.x != wallJumpingDirection)//if the player not facing the wall then filp
+                {
+                    isFacingRight = !isFacingRight;
+                    Vector3 localScale = transform.localScale;
+                    localScale.x *= -1f;
+                    transform.localScale = localScale;
+                }
+
+                Invoke(nameof(StopWallJumping), wallJumpingDuration);
+            }
         }
+       
     }
 
     private void StopWallJumping()
@@ -194,17 +210,22 @@ public class PlayerController : MonoBehaviour
         {//if not don't play move animation
             animator.SetBool("Moving", false);
         }
+        //death animatoins if player's health reached 0 
+        if (IsDead())
+        {
+            animator.SetTrigger("Death");
+        }
     }
     //this method check if the player moving or not
     private bool IsPlayerMoving()
     {
-        if (rb.velocity.x != 0f)
+        if (rb.velocity.x != 0f)//if the player start moving 
         {
-            return true;
+            return true;//player moved
         }
         else
         {
-            return false;
+            return false;////player standing still
         }
     }
     //handling shooting animation
@@ -213,7 +234,7 @@ public class PlayerController : MonoBehaviour
         shootingToggle = !shootingToggle;
 
         if (shootingToggle)
-        { 
+        { //if shooting toggled start shoot animations
             animator.SetBool("Shooting",true);
         }
         else
@@ -224,39 +245,42 @@ public class PlayerController : MonoBehaviour
 
     private void OnStartShooting()
     {//if shoot input pressed and shoot mode on then instantiate the bullet
-        if (shootInput && shootingToggle)
+        if (shootInput && shootingToggle && !IsDead())
         {
-             bullet = Instantiate(bulletPrefab, shootingPoint.position, shootingPoint.rotation);
-
-            if (isFacingRight)
-            {
+            //spawn the bullet prefab
+            bullet = Instantiate(bulletPrefab, shootingPoint.position, shootingPoint.rotation);
+            SoundManager.instance.PlayShootSound();
+            if (isFacingRight) // if facing right
+            {   //apply force to the bullet to the right axis
                 bullet.GetComponent<Rigidbody2D>().AddForce(transform.right * bulletShootForce);
             }
-            else
+            else //else applyf force to the left
             {
                 bullet.GetComponent<Rigidbody2D>().AddForce(-transform.right * bulletShootForce);
             }
         }
     }
-    private void OnSpriteRendererflip()
-    {//flip the player > if moving left filp to the left and so on
-        //Debug.Log("FILP SPRITE");
-        if (!IsWallSliding)
+
+
+    public bool IsDead()
+    {//checking if the player's health reached zere > dead
+        if (healthSystem.currentHealth <= 0)
         {
-            if (rb.velocity.x < 0)
-                transform.eulerAngles = new Vector2(0, 180);
-            else if (rb.velocity.x > 0)
-                transform.eulerAngles = new Vector2(0, 0);
-        }  
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     private void Flip()
-    {
-        if (isFacingRight && moveInput < 0f || !isFacingRight && moveInput > 0f)
+    {////flip the player > if moving left filp to the left and so on
+        if (isFacingRight && moveInput < 0f || !isFacingRight && moveInput > 0f && !IsDead())
         {
             isFacingRight = !isFacingRight;
             Vector3 localScale = transform.localScale;
-            localScale.x *= -1f;
+            localScale.x *= -1f;// local scale = -1 in 2d games mean filp the sprite to the left & +1 to the right
             transform.localScale = localScale;
         }
     }
