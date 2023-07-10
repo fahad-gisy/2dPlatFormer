@@ -5,25 +5,15 @@ using UnityEngine;
 
 public class MainMenuHandler : MonoBehaviour
 {
-    
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+   
 
     public void QutiGameBtn()
     {
-        Application.Quit();
+        Application.Quit();//quit the game button
     }
 
     public void PlayTheGameBtn()
     {
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("Game");// start the game button
     }
 }

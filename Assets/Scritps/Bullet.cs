@@ -4,14 +4,11 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    private Rigidbody2D rb;
     [SerializeField] private float bulletLifeTime;
     [SerializeField] private GameObject collisionParticles;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-        //rb.velocity = transform.right * ShootForce;
         Destroy(gameObject,bulletLifeTime);
     }
 

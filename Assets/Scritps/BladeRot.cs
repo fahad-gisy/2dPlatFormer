@@ -18,7 +18,9 @@ public class BladeRot : MonoBehaviour
         transform.Rotate(0,0,1 * bladeRotationSpeed);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+
+
+    private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag("Player"))
         {

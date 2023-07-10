@@ -22,12 +22,18 @@ public class MovingPlatfrom : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        if(transform.position.y < collision.transform.position.y)
-        collision.transform.SetParent(transform);
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            if (transform.position.y < collision.transform.position.y)
+                collision.transform.SetParent(transform);
+        }
     }
 
     void OnCollisionExit2D(Collision2D collision)
     {
-        collision.transform.SetParent(null);
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            collision.transform.SetParent(null);
+        }
     }
 }

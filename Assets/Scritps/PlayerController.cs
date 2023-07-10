@@ -7,56 +7,56 @@ public class PlayerController : MonoBehaviour
 {
     //variables
     [Header("PlayerComponents")]
-    private Rigidbody2D rb;
-    private SpriteRenderer spriteRenderer;
-    [HideInInspector] public Animator animator;
-    private HealthSystem healthSystem;
+    private Rigidbody2D rb;//rigidbody component
+    private SpriteRenderer spriteRenderer;//megaRobot(Main character's name)'s sprite renderer component
+    [HideInInspector] public Animator animator;//animator
+    private HealthSystem healthSystem;//player's health system
 
     
 
     [Header("Player Movements Variables")]
     [SerializeField] private float playerSpeed;// player target speed value
     private float moveInput;//float to store input value
-    private bool isFacingRight = true;
-    private GameObject bullet;
-    [SerializeField] private float bulletShootForce;
+    private bool isFacingRight = true;//booling checking if the player facing right or left
+    private GameObject bullet;//bullet prefab for shooting
+    [SerializeField] private float bulletShootForce;//bullet speed
 
 
     [Header("Jump Variables")]
-    [SerializeField] private bool jumpInput;
-    [SerializeField] private float jumpForce;
-    [SerializeField] private LayerMask groundLayerMask;
-    [SerializeField] Transform groundCheckTransform;
-    [SerializeField] private float groundCheckRadius;
-    [SerializeField] private bool isGrounded;
+    [SerializeField] private bool jumpInput;//booling checking if jump input is pressed
+    [SerializeField] private float jumpForce;//jump power
+    [SerializeField] private LayerMask groundLayerMask;//layer mask for the ground
+    [SerializeField] Transform groundCheckTransform;//ground's checking transform
+    [SerializeField] private float groundCheckRadius;//radius of ground check cricle
+    [SerializeField] private bool isGrounded;//bool check if player on the ground
 
 
     [Header("WallSliding Variables")]
-    private bool IsWallSliding;
-    [SerializeField] private float wallSlidingSpeed;
-    [SerializeField] private Transform wallCheck;
-    [SerializeField] private LayerMask wallLayerMask;
+    private bool IsWallSliding;//bool for checking is the player on the wall 
+    [SerializeField] private float wallSlidingSpeed;//slide down speed
+    [SerializeField] private Transform wallCheck;//wall check
+    [SerializeField] private LayerMask wallLayerMask;//wall layer so  we can tell
 
 
     [Header("WallJumping")]
-    private bool isWallJumping;
-    private float wallJumpingDirection;
-    private float wallJumpingTime = 0.2f;
-    private float wallJumpingCounter;
-    private float wallJumpingDuration = 0.4f;
-    [SerializeField] private Vector2 wallJumpingPower;
+    private bool isWallJumping;//bool so i can check if the player is wall jumping right now
+    private float wallJumpingDirection;//wall jumping direaction
+    private float wallJumpingTime = 0.2f;//wall jumping time so the player wont fly 4ever
+    private float wallJumpingCounter;//float for limitng the player's wall jumping
+    private float wallJumpingDuration = 0.4f;//how long the player can jump
+    [SerializeField] private Vector2 wallJumpingPower;//jumping power 
 
 
 
     [Header("Shooting Variables")]
-    private bool startShootingInput;
-    private bool shootInput;
-   [SerializeField] private bool shootingToggle;
-   [SerializeField] private Transform shootingPoint;
-   [SerializeField] private GameObject bulletPrefab;
+    private bool startShootingInput;//shooting input booling(shoot Mode)
+    private bool shootInput;//shooting input
+   [SerializeField] private bool shootingToggle;//toggle shooting On/Off
+   [SerializeField] private Transform shootingPoint;//bullet spawn transform
+   [SerializeField] private GameObject bulletPrefab;//the bullet prefab
 
     void Start()
-    {
+    {//getting the game object's components
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
@@ -70,6 +70,8 @@ public class PlayerController : MonoBehaviour
         {
             Flip();
         }
+
+
         PlayerAnimatationHandler();
         InputHandler();
         OnStartShooting();
@@ -90,7 +92,6 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         OnPlayerMove();
-
     }
 
     private void InputHandler()
@@ -167,7 +168,7 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
-                wallJumpingCounter -= Time.deltaTime;
+                wallJumpingCounter -= Time.deltaTime;//after the jump reset the jumping time
             }
 
             if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f)// if allowed to jump and space pressed
@@ -177,15 +178,15 @@ public class PlayerController : MonoBehaviour
                 rb.velocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);//apply the jump velcoity x,y
                 wallJumpingCounter = 0f;
 
-                if (transform.localScale.x != wallJumpingDirection)//if the player not facing the wall then filp
+                if (transform.localScale.x != wallJumpingDirection)//if the player not facing the jumpireaction then filp
                 {
-                    isFacingRight = !isFacingRight;
-                    Vector3 localScale = transform.localScale;
+                    isFacingRight = !isFacingRight;//if filp the facing direaciton
+                    Vector3 localScale = transform.localScale;//player's local scale
                     localScale.x *= -1f;
                     transform.localScale = localScale;
                 }
 
-                Invoke(nameof(StopWallJumping), wallJumpingDuration);
+                Invoke(nameof(StopWallJumping), wallJumpingDuration);//stop wall jumping after the duration end
             }
         }
        
